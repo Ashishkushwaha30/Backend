@@ -19,14 +19,14 @@ router.post('/createuser', [
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     success = false;
-    return res.status(400).json({ errors: errors.array() });
+    return res.json({success});
   }
   try {
     // Check whether the user with this email exists already
     let user = await User.findOne({ email: req.body.email });
     if (user) {
       success = false;
-      return res.status(400).json({ error: "Sorry a user with this email already exists" })
+      return res.json({success})
     }
     const salt = await bcrypt.genSalt(10);
     const secPass = await bcrypt.hash(req.body.password, salt);
@@ -64,7 +64,8 @@ router.post('/login', [
   // If there are errors, return Bad request and the errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    success = false;
+    return res.json({success});
   }
 
   const { email, password } = req.body;
@@ -72,13 +73,13 @@ router.post('/login', [
     let user = await User.findOne({ email });
     if (!user) {
       success = false
-      return res.status(400).json({ error: "Please try to login with correct credentials" });
+      return res.json({success});
     }
 
     const passwordCompare = await bcrypt.compare(password, user.password);
     if (!passwordCompare) {
       success = false
-      return res.status(400).json({ success, error: "Please try to login with correct credentials" });
+      return res.json({ success});
     }
 
     const data = {
@@ -105,7 +106,7 @@ router.post('/getuser', fetchuser,  async (req, res) => {
   try {
     userId = req.user.id;
     const user = await User.findById(userId).select("-password")
-    res.send(user)
+    res.send(user._id)
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Internal Server Error");
